@@ -2,21 +2,35 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class MyFirstNeuralNetwork:
-    ##FOR A SET AMOUNT OF INPUTS##
+    ##PURE SIGMOID NODES##
+    ##OUTPUT of network is one node of dot produt of last neruon layer of output and weights##
     def __init__(self, learning_rate, number_of_layers, number_of_neurons_list, number_of_inputs):
         self.weights = []
-        for i in range(number_of_layers):
-            localWeights = []
-            for j in range(number_of_neurons_list[i-1]+1):
-                for k in range(number_of_inputs):
-                    localWeights.append(np.random.randn()) #i layers, j neurons, k weights based from input
-            self.weights.append(localWeights)
-        self.weights = np.array(self.weights)
+        self.bias = []
+        
+        for i in range(number_of_layers+1):
+            localLayer = []
+            self.bias.append([])
+            if i < number_of_layers:
+                for j in range(number_of_neurons_list[i-1]):
+                    localNeuron = []
+                    for k in range(number_of_inputs):
+                        localNeuron.append(np.random.randn()) #i layers, j neurons, k weights based from input
+                    localLayer.append(localNeuron)
+                    self.bias[i].append(np.random.randn())
+            else:
+                localNeuron = []
+                for k in range(number_of_neurons_list[-1]):
+                    localNeuron.append(np.random.randn()) #i layers, j neurons, k weights based from input
+                localLayer.append(localNeuron)
+                self.bias[i].append(np.random.randn())
 
-        self.bias = np.random.randn()
+            self.weights.append(localLayer)
+
         self.learning_rate = learning_rate
         self.nLayer = number_of_layers
-        self.nNeuronList = number_of_neurons_list
+        self.nNeuronList = [number_of_inputs] + number_of_neurons_list
+        self.nInputs = number_of_inputs
 
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -24,38 +38,88 @@ class MyFirstNeuralNetwork:
     def sigmoidDeriv(self, x):
         return self.sigmoid(x) * (1 - self.sigmoid(x))
     
+    #def computePrediciton(self, )
+
+    def computeNodesValues(self, inputVector):
+        layersOutput = [] 
+        for layer in range(self.nLayer):
+            layerValues = [[], []] #IN, OUT
+            for neuron in range(self.nNeuronList[layer+1]):
+                neuronIn = self.bias[layer][neuron]
+                if layer == 0:
+                    for k in range(len(inputVector)):
+                        neuronIn = neuronIn + inputVector[k]*self.weights[layer][neuron][k]
+                else:
+                    for k in range(len(layersOutput[layer-1][1])):
+                        neuronIn = neuronIn + layersOutput[layer-1][1][k]*self.weights[layer][neuron][k]
+
+                neuronOut = self.sigmoid(neuronIn)
+                layerValues[0].append(neuronOut)
+                layerValues[1].append(neuronIn)
+            layersOutput.append(layerValues)
+
+        prediciton = self.bias[layer+1]
+        for i in range(len(layersOutput[layer-1][1])):
+            prediciton = prediciton + layersOutput[layer-1][1][i]*self.weights[layer+1][0][i]
+        layersOutput.append(prediciton)
+
+        return layersOutput # 1 list per neuron with dot product val and sigmoid val, last list is just a val of prediciton
+    
+    def computeWeightGradient(self, derror_dweightList, layer, neuron, derror_dprediction, dprediction_dlayer):
+        for path in range(self.nNeuronList[layer-1]):
+            dlayer_dweight = self.weights[layer][neuron][path] #get previous path weight
+            derror_dweight = derror_dprediction*dprediction_dlayer*dlayer_dweight #chain rule
+            derror_dweightList[layer][neuron].append(derror_dweight)
+
+        return derror_dweightList
+    
+    def computeBiasGradient(self, derror_dbiasList, layer, neuron, derror_dprediction, dprediction_dlayer):
+        dlayer_dbias = self.bias[layer][neuron]
+        derror_dbias = derror_dprediction*dprediction_dlayer*dlayer_dbias
+        derror_dbiasList[layer][neuron].append(derror_dbias) 
+
+        return derror_dbiasList
+
+    def computeErrorGradient(self, inputVector, target):
+        ''' derror_dbias, derror_dweights = computeErrorGradient(inputVector, target)
+        INPUTS:
+        inputVector: numpy array of n elements
+        target: int
+        '''
+        derror_dbiasList = []
+        derror_dweightList = []
+
+        nodeValues = self.computeNodesValues(inputVector)
+        lastLayerOutput = np.array(nodeValues[-1][1])
+        outputWeights = np.array(self.weights[-1][0]) #equivalent to dprediction_dweightOut
+
+        derror_dprediction = 2*(np.dot(lastLayerOutput, outputWeights)  - target)
+        derror_dweightList.append([outputWeights])
+
+        for i in range(self.nLayer):
+            derror_dweightList.insert(0, [])
+            derror_dbiasList.insert(0, [])
+
+            layer = self.nLayer-i
+            for neuron in range(self.nNeuronList[layer]):
+                derror_dweightList.insert(0, [])
+                derror_dbiasList.insert(0, [])
+
+                dprediction_dlayer = self.sigmoidDeriv(nodeValues[layer][1][neuron])
+                derror_dweightList = self.computeWeightGradient(self, derror_dweightList, layer, neuron, derror_dprediction, dprediction_dlayer)
+                derror_dbiasList = self.computeBiasGradient(self, derror_dbiasList, layer, neuron, derror_dprediction, dprediction_dlayer)
+
+        derror_dweightList = np.array(derror_dweightList)
+        derror_dbiasList = np.array(derror_dbiasList)
+
+        return derror_dbiasList, derror_dweightList       
+    
     def predict(self, inputVector):
-        layer1 = np.dot(inputVector, self.weights[self.nLayer-1]) + self.bias ##dot products acts as linear combination a*x+b*y
-        layer2 = self.sigmoid(layer1)
-        return layer2
-    
-    def computeErrorGradient(self, inputVector, target, localLayer):
-        a = inputVector[0]
-        b = inputVector[1]
-       
-        x = self.weights[localLayer][0]
-        y = self.weights[localLayer][1]
-        z = self.bias
+        layersValues = self.computeNodesValues(inputVector)
+        return layersValues[-1]
 
-        layer1 = a*x+b*y+z
-        layer2 = self.sigmoid(layer1)
-
-        dlayer1_dx = a
-        dlayer1_dy = b
-        dlayer1_dz = 1
-
-        derror_dprediction = 2 * (layer2 - target)
-        dprediction_dlayer1 = self.sigmoidDeriv(layer1)
-        chainRule = derror_dprediction*dprediction_dlayer1
-
-        derror_dweights = np.array([chainRule*dlayer1_dx, chainRule*dlayer1_dy])
-        derror_dbias = chainRule*dlayer1_dz
-
-        return derror_dbias, derror_dweights        
-    
     def updateParameters(self, derror_dbias, derror_dweights):
         self.bias = self.bias - (derror_dbias * self.learning_rate)
-        
         self.weights = self.weights - (derror_dweights * self.learning_rate)
         
         return
@@ -81,9 +145,8 @@ class MyFirstNeuralNetwork:
             inputVector = inputVectors[randDataIndex]
             target = targets[randDataIndex]
 
-            for j in range(self.nLayer):
-                derror_dbias, derror_dweights = self.computeErrorGradient(inputVector, target, j)
-                self.updateParameters(derror_dbias, derror_dweights)
+            derror_dbias, derror_dweights = self.computeErrorGradient(inputVector, target)
+            self.updateParameters(derror_dbias, derror_dweights)
 
             # Measure the cumulative error for all the instances, taken every iterations
             if i % 50 == 0:
@@ -109,9 +172,9 @@ inputVectors = np.array(
 targets = np.array([0, 1, 0, 1, 0, 1, 1, 0])
 learning_rate = 0.1
 
-neural_network = MyFirstNeuralNetwork(learning_rate, 1, [1])
+neural_network = MyFirstNeuralNetwork(learning_rate, 1, [1], 2)
 
-trainingError = neural_network.train(inputVectors, targets, 10000)
+trainingError = neural_network.train(inputVectors, targets, 100)
 
 plt.plot(trainingError)
 plt.xlabel("Iterations")
