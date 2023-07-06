@@ -39,6 +39,7 @@ class MyFirstNeuralNetwork:
         return self.sigmoid(x) * (1 - self.sigmoid(x))
     
     #def computePrediciton(self, )
+    ##NEED TO CREATE FUNC TO SEPERATELY CALCULATE INPUT AND OUTPUT
 
     def computeNodesValues(self, inputVector):
         layersOutput = [] 
@@ -58,10 +59,11 @@ class MyFirstNeuralNetwork:
                 layerValues[1].append(neuronIn)
             layersOutput.append(layerValues)
 
-        prediciton = self.bias[layer+1]
+        prediciton = self.bias[layer+1][0]
         for i in range(len(layersOutput[layer-1][1])):
             prediciton = prediciton + layersOutput[layer-1][1][i]*self.weights[layer+1][0][i]
         layersOutput.append(prediciton)
+
 
         return layersOutput # 1 list per neuron with dot product val and sigmoid val, last list is just a val of prediciton
     
@@ -80,6 +82,15 @@ class MyFirstNeuralNetwork:
 
         return derror_dbiasList
 
+    def dotProduct(self, v1, v2):
+        result = 0
+        if len(v1) == len(v2):
+            for i in range(len(v1)):
+                result = result + v1[i]*v2[i]
+        else:
+            print("ERROR: can't compute dot product of 2 vectors that don't have the same length")
+        return result
+
     def computeErrorGradient(self, inputVector, target):
         ''' derror_dbias, derror_dweights = computeErrorGradient(inputVector, target)
         INPUTS:
@@ -90,10 +101,10 @@ class MyFirstNeuralNetwork:
         derror_dweightList = []
 
         nodeValues = self.computeNodesValues(inputVector)
-        lastLayerOutput = np.array(nodeValues[-1][1])
-        outputWeights = np.array(self.weights[-1][0]) #equivalent to dprediction_dweightOut
+        lastLayerOutput = nodeValues[-2][1]
+        outputWeights = self.weights[-1][0] #equivalent to dprediction_dweightOut
 
-        derror_dprediction = 2*(np.dot(lastLayerOutput, outputWeights)  - target)
+        derror_dprediction = 2*(self.dotProduct(lastLayerOutput, outputWeights)  - target)
         derror_dweightList.append([outputWeights])
 
         for i in range(self.nLayer):
@@ -104,10 +115,9 @@ class MyFirstNeuralNetwork:
             for neuron in range(self.nNeuronList[layer]):
                 derror_dweightList.insert(0, [])
                 derror_dbiasList.insert(0, [])
-
-                dprediction_dlayer = self.sigmoidDeriv(nodeValues[layer][1][neuron])
-                derror_dweightList = self.computeWeightGradient(self, derror_dweightList, layer, neuron, derror_dprediction, dprediction_dlayer)
-                derror_dbiasList = self.computeBiasGradient(self, derror_dbiasList, layer, neuron, derror_dprediction, dprediction_dlayer)
+                dprediction_dlayer = self.sigmoidDeriv(nodeValues[layer-1][neuron][0])
+                derror_dweightList = self.computeWeightGradient(derror_dweightList, layer, neuron, derror_dprediction, dprediction_dlayer)
+                derror_dbiasList = self.computeBiasGradient(derror_dbiasList, layer, neuron, derror_dprediction, dprediction_dlayer)
 
         derror_dweightList = np.array(derror_dweightList)
         derror_dbiasList = np.array(derror_dbiasList)
