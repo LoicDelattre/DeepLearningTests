@@ -67,12 +67,12 @@ class MyFirstNeuralNetwork:
 
         return layersOutput # 1 list per neuron with dot product val and sigmoid val, last list is just a val of prediciton
     
-    def computeWeightGradient(self, derror_dweightList, layer, neuron, derror_dprediction, dprediction_dlayer):
-        for path in range(self.nNeuronList[layer-1]):
-            dlayer_dweight = self.weights[layer][neuron][path] #get previous path weight
-            derror_dweight = derror_dprediction*dprediction_dlayer*dlayer_dweight #chain rule
+    def computeWeightGradient(self, derror_dweightList, layer, neuron, derror_dinput, inputValue, dinputNext_dlayer):
+        for path in range(self.nNeuronList[layer]):
+            dinput_dweight = self.weights[layer][neuron][path] #get previous path weight
+            dlayer_dinput = self.sigmoidDeriv(inputValue)
+            derror_dweight = derror_dinput*dinputNext_dlayer*dlayer_dinput*dinput_dweight #chain rule
             derror_dweightList[layer][neuron].append(derror_dweight)
-
         return derror_dweightList
     
     def computeBiasGradient(self, derror_dbiasList, layer, neuron, derror_dprediction, dprediction_dlayer):
@@ -105,23 +105,25 @@ class MyFirstNeuralNetwork:
         outputWeights = self.weights[-1][0] #equivalent to dprediction_dweightOut
 
         derror_dprediction = 2*(self.dotProduct(lastLayerOutput, outputWeights)  - target)
-        derror_dweightList.append([outputWeights])
+
+        derror_dweightList.insert(0, [])
+        for i in range(len(outputWeights)):
+            derror_dweightList[0].append(outputWeights[i]*derror_dprediction)
+            derror_dinput = derror_dprediction
 
         for i in range(self.nLayer):
             derror_dweightList.insert(0, [])
             derror_dbiasList.insert(0, [])
+            layer = self.nLayer-i-1 #if 0 then is layer 1, etc
+            for neuron in range(self.nNeuronList[layer+1]):
+                derror_dweightList[layer].insert(0, [])
+                derror_dbiasList[layer].insert(0, [])
+                inputValue = nodeValues[layer][0][neuron]
+                dinputNext_dlayer = 
+                derror_dweightList = self.computeWeightGradient(derror_dweightList, layer, neuron, derror_dinput, inputValue, dinputNext_dlayer)
+                derror_dbiasList = self.computeBiasGradient(derror_dbiasList, layer, neuron, derror_dprediction, 1)
 
-            layer = self.nLayer-i
-            for neuron in range(self.nNeuronList[layer]):
-                derror_dweightList.insert(0, [])
-                derror_dbiasList.insert(0, [])
-                dprediction_dlayer = self.sigmoidDeriv(nodeValues[layer-1][neuron][0])
-                derror_dweightList = self.computeWeightGradient(derror_dweightList, layer, neuron, derror_dprediction, dprediction_dlayer)
-                derror_dbiasList = self.computeBiasGradient(derror_dbiasList, layer, neuron, derror_dprediction, dprediction_dlayer)
-
-        derror_dweightList = np.array(derror_dweightList)
-        derror_dbiasList = np.array(derror_dbiasList)
-
+        print(derror_dweightList)
         return derror_dbiasList, derror_dweightList       
     
     def predict(self, inputVector):
