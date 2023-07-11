@@ -28,6 +28,7 @@ class MyFirstNeuralNetwork:
 
             self.weights.append(localLayer)
 
+        self.weights[1][0][0] = 1#for testing
         self.learning_rate = learning_rate
         self.nNeuronList = [number_of_inputs] + number_of_neurons_list + [1] #input + hidden + output
         self.nInputs = number_of_inputs
@@ -65,16 +66,7 @@ class MyFirstNeuralNetwork:
         layersOutput.append(prediciton)
         layersOutput.insert(0, [inputVector])
 
-        return layersOutput # 1 list per neuron with dot product val and sigmoid val, last list is just a val of prediciton
-    
-    def computeWeightGradient(self, derror_dweightList, layer, neuron, alphaList, prevOutputs):
-        for path in range(self.nNeuronList[layer]):
-            derror_dweightList[0][0].append(alphaList[neuron]*prevOutputs[path])
-        return derror_dweightList
-    
-    def computeBiasGradient(self, derror_dbiasList, layer, neuron, alphaList):
-        derror_dbiasList[0].append(alphaList[neuron])
-        return derror_dbiasList
+        return layersOutput # 1 list per neuron with dot product val and sigmoid val, last list is just a val of prediciton  
     
     def computeAlphas(self, alphaList, layer, neuron, inputValue):
         nextAlpha = 0
@@ -117,6 +109,8 @@ class MyFirstNeuralNetwork:
 
 
         for i in range(self.nLayer):
+            print(f'weights:', self.weights)
+            print(f'alpha list:', alphaList)
             derror_dweightList.insert(0, [])
             derror_dbiasList.insert(0, [])
             layer = self.nLayer-i-1 #if 0 then is layer 1, etc
@@ -125,10 +119,13 @@ class MyFirstNeuralNetwork:
                 inputValue = nodeValues[layer+1][0][neuron] #+1 since nodeValues also contains the values of the input layer
                 prevOutputs = nodeValues[layer][0]
 
-                derror_dweightList = self.computeWeightGradient(derror_dweightList, layer, neuron, alphaList, prevOutputs)
-                derror_dbiasList = self.computeBiasGradient(derror_dbiasList, layer, neuron, alphaList)
-                alphaList[neuron] = self.computeAlphas(alphaList, layer, neuron, inputValue)
+                for path in range(self.nNeuronList[layer]):
+                    derror_dweightList[0][0].append(alphaList[neuron]*prevOutputs[path])
 
+                derror_dbiasList[0].append(alphaList[neuron])
+                alphaList[neuron] = self.computeAlphas(alphaList, layer, neuron, inputValue) #error is not here (yet)
+
+        print(f'derror/dweights:', derror_dweightList)
         return derror_dbiasList, derror_dweightList       
     
     def predict(self, inputVector):
@@ -190,12 +187,12 @@ inputVectors = [
 targets = [0, 1, 0, 1, 0, 1, 1, 0]
 
 learning_rate = 0.1
-numberOfNeurons = [2]
+numberOfNeurons = [1]
 numberOfInputs = 2
 
 neural_network = MyFirstNeuralNetwork(learning_rate, numberOfNeurons, numberOfInputs)
 
-trainingError = neural_network.train(inputVectors, targets, 10000)
+trainingError = neural_network.train(inputVectors, targets, 6)
 
 plt.plot(trainingError)
 plt.xlabel("Iterations")
