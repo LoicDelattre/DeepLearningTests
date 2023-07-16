@@ -29,6 +29,10 @@ class MyFirstNeuralNetwork:
             self.weights.append(localLayer)
 
         self.weights[1][0][0] = 1#for testing
+        self.bias[1][0] = 0 #for testing
+        self.weights = [[[1.124616450277002, -1.028642376350241]], [[1]]] #for testing
+        self.bias = [[0.919864968475112], [0]]
+        
         self.learning_rate = learning_rate
         self.nNeuronList = [number_of_inputs] + number_of_neurons_list + [1] #input + hidden + output
         self.nInputs = number_of_inputs
@@ -95,7 +99,7 @@ class MyFirstNeuralNetwork:
 
         nodeValues = self.computeNodesValues(inputVector)
         lastLayerOutput = nodeValues[-2][1]
-        outputWeights = self.weights[-1][0] #equivalent to dprediction_dweightOut
+        outputWeights = self.weights[-1][0] 
 
         derror_dprediction = 2*(self.dotProduct(lastLayerOutput, outputWeights)  - target)
 
@@ -193,7 +197,7 @@ numberOfInputs = 2
 
 neural_network = MyFirstNeuralNetwork(learning_rate, numberOfNeurons, numberOfInputs)
 
-trainingError = neural_network.train(inputVectors, targets, 6)
+trainingError = neural_network.train([[5.5, 1], [3, 4]], [1, 1], 6)
 
 plt.plot(trainingError)
 plt.xlabel("Iterations")

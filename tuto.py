@@ -101,7 +101,7 @@ learning_rate = 0.1
 
 neural_network = MyFirstNeuralNetwork(learning_rate)
 
-trainingError = neural_network.train(inputVectors, targets, 10000)
+trainingError = neural_network.train([[5.5, 1], [3, 4]], [1, 1], 10000)
 
 plt.plot(trainingError)
 plt.xlabel("Iterations")
