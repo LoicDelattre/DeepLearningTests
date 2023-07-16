@@ -101,9 +101,9 @@ learning_rate = 0.1
 
 neural_network = MyFirstNeuralNetwork(learning_rate)
 
-trainingError = neural_network.train(inputVectors, targets, 100)
+trainingError = neural_network.train(inputVectors, targets, 10000)
 
 plt.plot(trainingError)
 plt.xlabel("Iterations")
 plt.ylabel("Error for all training instances")
-plt.savefig("cumulative_error.png")
+plt.savefig("cumulative_error_ref.png")

@@ -70,7 +70,7 @@ class MyFirstNeuralNetwork:
     
     def computeAlphas(self, alphaList, layer, neuron, inputValue):
         nextAlpha = 0
-        for j in range(len(self.weights[layer][neuron])):
+        for j in range(len(self.weights[layer+1][neuron])):
             nextAlpha += alphaList[j]*self.weights[layer][neuron][j]
         nextAlpha = nextAlpha*self.sigmoidDeriv(inputValue)
         return nextAlpha
@@ -106,7 +106,7 @@ class MyFirstNeuralNetwork:
             derror_dweightList[0][0].append(derror_dprediction*lastLayerOutput[i])
             alphaList.append(derror_dprediction*outputWeights[i]*self.sigmoidDeriv(nodeValues[-2][0][i]))
         derror_dbiasList[0].append(derror_dprediction)
-
+        print(f'nodeValues: ', nodeValues)
 
         for i in range(self.nLayer):
             print(f'weights:', self.weights)
@@ -118,12 +118,13 @@ class MyFirstNeuralNetwork:
                 derror_dweightList[0].insert(0, [])
                 inputValue = nodeValues[layer+1][0][neuron] #+1 since nodeValues also contains the values of the input layer
                 prevOutputs = nodeValues[layer][0]
+                print(f'prevOutput: ', prevOutputs)
 
                 for path in range(self.nNeuronList[layer]):
                     derror_dweightList[0][0].append(alphaList[neuron]*prevOutputs[path])
 
                 derror_dbiasList[0].append(alphaList[neuron])
-                alphaList[neuron] = self.computeAlphas(alphaList, layer, neuron, inputValue) #error is not here (yet)
+                alphaList[neuron] = self.computeAlphas(alphaList, layer, neuron, inputValue) 
 
         print(f'derror/dweights:', derror_dweightList)
         return derror_dbiasList, derror_dweightList       
@@ -199,4 +200,4 @@ plt.xlabel("Iterations")
 plt.ylabel("Error for all training instances")
 plt.savefig("cumulative_error.png")
 
-print(neural_network.predict([3, 1.5]))
+#print(neural_network.predict([3, 1.5]))
