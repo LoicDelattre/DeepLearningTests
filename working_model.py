@@ -3,20 +3,19 @@ import matplotlib.pyplot as plt
 
 class MyFirstNeuralNetwork:
     ##FOR A SET AMOUNT OF INPUTS##
-    def __init__(self, learning_rate, number_of_layers, number_of_neurons_list, number_of_inputs):
+    ### 1 layer changeable neurons num in layer##
+    def __init__(self, learning_rate, number_of_neurons, number_of_inputs):
         self.weights = []
-        for i in range(number_of_layers):
-            localWeights = []
-            for j in range(number_of_neurons_list[i-1]+1):
-                for k in range(number_of_inputs):
-                    localWeights.append(np.random.randn()) #i layers, j neurons, k weights based from input
-            self.weights.append(localWeights)
+        for j in range(number_of_neurons):
+            local_weights = []
+            for k in range(number_of_inputs):
+                local_weights.append(np.random.randn()) #j neurons, k weights based from input
+            self.weights.append(local_weights)
         self.weights = np.array(self.weights)
 
         self.bias = np.random.randn()
         self.learning_rate = learning_rate
-        self.nLayer = number_of_layers
-        self.nNeuronList = number_of_neurons_list
+        self.nNeuron = number_of_neurons
 
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -25,16 +24,16 @@ class MyFirstNeuralNetwork:
         return self.sigmoid(x) * (1 - self.sigmoid(x))
     
     def predict(self, inputVector):
-        layer1 = np.dot(inputVector, self.weights[self.nLayer-1]) + self.bias ##dot products acts as linear combination a*x+b*y
+        layer1 = np.dot(inputVector, self.weights[0]) + self.bias ##dot products acts as linear combination a*x+b*y
         layer2 = self.sigmoid(layer1)
         return layer2
     
-    def computeErrorGradient(self, inputVector, target, localLayer):
+    def computeErrorGradient(self, inputVector, target):
         a = inputVector[0]
         b = inputVector[1]
-       
-        x = self.weights[localLayer][0]
-        y = self.weights[localLayer][1]
+        
+        x = self.weights[0][0] ##1 neuron
+        y = self.weights[0][1] ##1 neuron
         z = self.bias
 
         layer1 = a*x+b*y+z
@@ -56,7 +55,7 @@ class MyFirstNeuralNetwork:
     def updateParameters(self, derror_dbias, derror_dweights):
         self.bias = self.bias - (derror_dbias * self.learning_rate)
         
-        self.weights = self.weights - (derror_dweights * self.learning_rate)
+        self.weights[0] = self.weights[0] - (derror_dweights * self.learning_rate)
         
         return
     
@@ -71,7 +70,7 @@ class MyFirstNeuralNetwork:
 
             cumulativeError = cumulativeError + error
 
-        return cumulativeError
+        return cumulativeError/j
 
     def train(self, inputVectors, targets, iterations):
         cumulativeErrors = []
@@ -81,9 +80,8 @@ class MyFirstNeuralNetwork:
             inputVector = inputVectors[randDataIndex]
             target = targets[randDataIndex]
 
-            for j in range(self.nLayer):
-                derror_dbias, derror_dweights = self.computeErrorGradient(inputVector, target, j)
-                self.updateParameters(derror_dbias, derror_dweights)
+            derror_dbias, derror_dweights = self.computeErrorGradient(inputVector, target)
+            self.updateParameters(derror_dbias, derror_dweights)
 
             # Measure the cumulative error for all the instances, taken every iterations
             if i % 50 == 0:
@@ -109,11 +107,13 @@ inputVectors = np.array(
 targets = np.array([0, 1, 0, 1, 0, 1, 1, 0])
 learning_rate = 0.1
 
-neural_network = MyFirstNeuralNetwork(learning_rate, 1, [1])
+neural_network = MyFirstNeuralNetwork(learning_rate, 1, 2)
 
-trainingError = neural_network.train(inputVectors, targets, 10000)
+trainingError = neural_network.train(inputVectors, targets, 1000)
 
 plt.plot(trainingError)
 plt.xlabel("Iterations")
 plt.ylabel("Error for all training instances")
 plt.savefig("cumulative_error.png")
+
+print(neural_network.predict([2, 1]))
