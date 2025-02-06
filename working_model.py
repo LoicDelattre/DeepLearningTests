@@ -1,5 +1,13 @@
 import numpy as np
-import matplotlib.pyplot as plt
+
+'''
+N1--\    node1
+     \  
+       -----SUM--------ACTIVATION--------OUTPUT
+     /    weights       sigmoid
+N2--/      bias
+'''
+
 
 class MyFirstNeuralNetwork:
     ##FOR A SET AMOUNT OF INPUTS##
@@ -16,6 +24,9 @@ class MyFirstNeuralNetwork:
         self.bias = np.random.randn()
         self.learning_rate = learning_rate
         self.nNeuron = number_of_neurons
+        
+    def getWeights(self):
+        return self.weights
 
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -74,6 +85,7 @@ class MyFirstNeuralNetwork:
 
     def train(self, inputVectors, targets, iterations):
         cumulativeErrors = []
+        qt = iterations/100
         for i in range(iterations):
             randDataIndex = np.random.randint(len(inputVectors))
 
@@ -84,36 +96,8 @@ class MyFirstNeuralNetwork:
             self.updateParameters(derror_dbias, derror_dweights)
 
             # Measure the cumulative error for all the instances, taken every iterations
-            if i % 50 == 0:
+            if i % qt == 0:
                 cumulativeError = self.sampleErrors(inputVectors, targets)
                 cumulativeErrors.append(cumulativeError)
 
         return cumulativeErrors
-
-
-inputVectors = np.array(
-    [
-        [3, 1.5],
-        [2, 1],
-        [4, 1.5],
-        [3, 4],
-        [3.5, 0.5],
-        [2, 0.5],
-        [5.5, 1],
-        [1, 1],
-    ]
- )
-
-targets = np.array([0, 1, 0, 1, 0, 1, 1, 0])
-learning_rate = 0.1
-
-neural_network = MyFirstNeuralNetwork(learning_rate, 1, 2)
-
-trainingError = neural_network.train(inputVectors, targets, 1000)
-
-plt.plot(trainingError)
-plt.xlabel("Iterations")
-plt.ylabel("Error for all training instances")
-plt.savefig("cumulative_error.png")
-
-print(neural_network.predict([2, 1]))
